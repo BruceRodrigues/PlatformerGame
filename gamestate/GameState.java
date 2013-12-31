@@ -8,6 +8,7 @@ public abstract class GameState {
 
 	public GameState(GameStateManager gsm) {
 		this.manager = gsm;
+		this.init();
 	}
 
 	public abstract void init();

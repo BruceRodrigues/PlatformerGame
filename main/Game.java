@@ -6,7 +6,7 @@ import java.awt.Toolkit;
 import javax.swing.JFrame;
 
 /*
- * This game was made folling the ForeignGuyMike tutorial.
+ * This game was made following the ForeignGuyMike tutorial.
  * http://www.youtube.com/user/ForeignGuyMike
  */
 

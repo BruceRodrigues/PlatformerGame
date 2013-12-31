@@ -19,6 +19,7 @@ public class GameStateManager implements Drawable {
 		this.gameStates = new ArrayList<GameState>();
 		this.currentState = State.MENUSTATE;
 		this.gameStates.add(new MenuState(this));
+		this.gameStates.add(new Level1State(this));
 	}
 
 	public void setState(State state) {
