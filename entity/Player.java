@@ -24,9 +24,9 @@ public class Player extends MapObject implements Drawable {
 	private boolean firing;
 	private int fireCost;
 	private int fireBallDamage;
-	// private ArrayList<FireBall> fireBalls;
+	private ArrayList<FireBall> fireBalls;
 
-	private boolean scrathing;
+	private boolean scratching;
 	private int scratchDamage;
 	private int scratchRange;
 
@@ -52,7 +52,7 @@ public class Player extends MapObject implements Drawable {
 		this.cwidth = 20;
 		this.cheight = 20;
 
-		this.moveSpeed = 0.3;
+		this.moveSpeed = 0.5;
 		this.maxSpeed = 1.6;
 		this.stopSpeed = 0.4;
 		this.fallSpeed = 0.15;
@@ -71,6 +71,8 @@ public class Player extends MapObject implements Drawable {
 		this.scratchDamage = 8;
 		this.scratchRange = 40;
 
+		this.fireBalls = new ArrayList<FireBall>();
+
 		try {
 			BufferedImage spriteSheet = ImageIO.read(getClass()
 					.getResourceAsStream(
@@ -85,7 +87,7 @@ public class Player extends MapObject implements Drawable {
 							* this.height, this.width, this.height);
 					if (i == 6) {
 						bi[j] = spriteSheet.getSubimage(j * this.width * 2, i
-								* this.height, this.width, this.height);
+								* this.height, this.width * 2, this.height);
 					}
 				}
 				this.sprites.add(bi);
@@ -121,7 +123,7 @@ public class Player extends MapObject implements Drawable {
 	}
 
 	public void setScratching() {
-		this.scrathing = true;
+		this.scratching = true;
 	}
 
 	public void setGliding(boolean b) {
@@ -136,8 +138,37 @@ public class Player extends MapObject implements Drawable {
 		checkTileMapCollision();
 		setPosition(this.xtemp, this.ytemp);
 
+		for (int i = 0; i < this.fireBalls.size(); i++) {
+			this.fireBalls.get(i).update();
+			if (this.fireBalls.get(i).shouldRemove()) {
+				this.fireBalls.remove(i);
+				i--;
+			}
+		}
+
+		if (this.currentAction == FIREBALL && this.animation.hasPlayedOnce()) {
+			this.firing = false;
+		}
+		if (this.currentAction == SCRATCHING && this.animation.hasPlayedOnce()) {
+			this.scratching = false;
+		}
+
+		// fireball atack
+		this.fire++;
+		if (this.fire > this.maxFire) {
+			this.fire = this.maxFire;
+		}
+		if (this.firing && this.currentAction != FIREBALL) {
+			if (this.fire > this.fireCost) {
+				this.fire -= this.fireCost;
+				FireBall fireball = new FireBall(this.tileMap, this.facingRight);
+				fireball.setPosition(this.x, this.y);
+				this.fireBalls.add(fireball);
+			}
+		}
+
 		// set animation
-		if (this.scrathing) {
+		if (this.scratching) {
 			if (this.currentAction != SCRATCHING) {
 				this.currentAction = SCRATCHING;
 				this.animation.setFrames(this.sprites.get(SCRATCHING));
@@ -205,6 +236,10 @@ public class Player extends MapObject implements Drawable {
 	@Override
 	public void draw(Graphics2D graphics) {
 		setMapPosition();
+
+		for (FireBall fireball : this.fireBalls) {
+			fireball.draw(graphics);
+		}
 
 		// draw player
 		if (this.flinching) {

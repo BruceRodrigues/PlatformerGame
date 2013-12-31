@@ -37,7 +37,7 @@ public class TileMap implements Drawable {
 		this.tileSize = tileSize;
 		this.numRowsToDraw = GamePanel.HEIGHT / tileSize + 2;
 		this.numColsToDraw = GamePanel.WIDTH / tileSize + 2;
-		this.tween = 0.07;
+		this.tween = 0.7;
 	}
 
 	public void loadTiles(String s) {
