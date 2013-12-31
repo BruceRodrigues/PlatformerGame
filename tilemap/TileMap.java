@@ -72,6 +72,11 @@ public class TileMap implements Drawable {
 			this.width = this.numCols * this.tileSize;
 			this.height = this.numRows * this.tileSize;
 
+			this.xmin = GamePanel.WIDTH - this.width;
+			this.xmax = 0;
+			this.ymin = GamePanel.HEIGHT - this.height;
+			this.ymax = 0;
+
 			String delims = "\\s+";
 			for (int row = 0; row < this.numRows; row++) {
 				String line = br.readLine();
@@ -140,7 +145,6 @@ public class TileMap implements Drawable {
 
 	@Override
 	public boolean update() {
-		// TODO Auto-generated method stub
 		return true;
 	}
 
