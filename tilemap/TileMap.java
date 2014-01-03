@@ -112,10 +112,14 @@ public class TileMap implements Drawable {
 	}
 
 	public Type getType(int row, int col) {
-		int rc = this.map[row][col];
-		int r = rc / this.numTileAcross;
-		int c = rc % this.numTileAcross;
-		return this.tiles[r][c].getType();
+		if (row < this.numRows && col < this.numCols) {
+			int rc = this.map[row][col];
+			int r = rc / this.numTileAcross;
+			int c = rc % this.numTileAcross;
+			return this.tiles[r][c].getType();
+		} else {
+			return Type.BLOCKED;
+		}
 	}
 
 	public void setPosition(double x, double y) {

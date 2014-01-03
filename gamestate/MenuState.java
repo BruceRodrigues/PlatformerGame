@@ -32,7 +32,7 @@ public class MenuState extends GameState {
 	public MenuState(GameStateManager manager) {
 		super(manager);
 
-		this.background = new Background("/Backgrounds/menubg.gif", 1);
+		this.background = new Background("/Resources/Backgrounds/menubg.gif", 1);
 		this.background.setVector(-0.1, 0);
 		this.titleColor = new Color(0, 0, 125);
 		this.titleFont = new Font("Century Gothic", Font.PLAIN, 28);
@@ -55,7 +55,7 @@ public class MenuState extends GameState {
 
 		graphics.setColor(this.titleColor);
 		graphics.setFont(this.titleFont);
-		graphics.drawString("Platformer Game", 80, 70);
+		graphics.drawString("Platformer Game", 50, 70);
 
 		graphics.setFont(this.font);
 		for (Option option : Option.values()) {

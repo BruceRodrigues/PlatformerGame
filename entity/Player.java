@@ -1,14 +1,19 @@
 package entity;
 
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.imageio.ImageIO;
 
 import tilemap.TileMap;
 import api.Drawable;
+import audio.AudioPlayer;
 
 public class Player extends MapObject implements Drawable {
 
@@ -30,7 +35,13 @@ public class Player extends MapObject implements Drawable {
 	private int scratchDamage;
 	private int scratchRange;
 
+	private ArrayList<Point> history;
+
 	private boolean gliding;
+
+	private boolean backOnTime;
+
+	private Map<String, AudioPlayer> sfx;
 
 	private ArrayList<BufferedImage[]> sprites;
 	// number of frames for each animation
@@ -62,6 +73,8 @@ public class Player extends MapObject implements Drawable {
 
 		this.facingRight = true;
 
+		this.backOnTime = false;
+
 		this.health = this.maxHealth = 5;
 		this.fire = this.maxFire = 2500;
 
@@ -72,6 +85,8 @@ public class Player extends MapObject implements Drawable {
 		this.scratchRange = 40;
 
 		this.fireBalls = new ArrayList<FireBall>();
+
+		this.history = new ArrayList<Point>();
 
 		try {
 			BufferedImage spriteSheet = ImageIO.read(getClass()
@@ -100,6 +115,10 @@ public class Player extends MapObject implements Drawable {
 		this.currentAction = IDLE;
 		this.animation.setFrames(this.sprites.get(IDLE));
 		this.animation.setDelay(400);
+
+		this.sfx = new HashMap<String, AudioPlayer>();
+		this.sfx.put("jump", new AudioPlayer("/Resources/SFX/jump.mp3"));
+		this.sfx.put("scratch", new AudioPlayer("/Resources/SFX/scratch.mp3"));
 	}
 
 	public int getHealth() {
@@ -130,13 +149,29 @@ public class Player extends MapObject implements Drawable {
 		this.gliding = b;
 	}
 
+	public void setBackOnTime(boolean b) {
+		this.backOnTime = b;
+	}
+
 	@Override
 	public boolean update() {
 
 		// update position
 		getNextPosition();
 		checkTileMapCollision();
-		setPosition(this.xtemp, this.ytemp);
+		if (!this.backOnTime) {
+			setPosition(this.xtemp, this.ytemp);
+		} else {
+			if (!this.history.isEmpty()) {
+				Point e = this.history.remove(this.history.size() - 1);
+				setPosition(e.getX(), e.getY());
+			}
+		}
+		if (!this.backOnTime) {
+			this.history.add(this.history.size() % 100, new Point(
+					(int) this.xtemp, (int) this.ytemp));
+
+		}
 
 		for (int i = 0; i < this.fireBalls.size(); i++) {
 			this.fireBalls.get(i).update();
@@ -167,9 +202,17 @@ public class Player extends MapObject implements Drawable {
 			}
 		}
 
+		if (this.flinching) {
+			long elapsed = (System.nanoTime() - this.flinchingTime) / 1000000;
+			if (elapsed > 1000) {
+				this.flinching = false;
+			}
+		}
+
 		// set animation
 		if (this.scratching) {
 			if (this.currentAction != SCRATCHING) {
+				this.sfx.get("scratch").play();
 				this.currentAction = SCRATCHING;
 				this.animation.setFrames(this.sprites.get(SCRATCHING));
 				this.animation.setDelay(50);
@@ -293,6 +336,7 @@ public class Player extends MapObject implements Drawable {
 		}
 
 		if (this.jumping && !this.falling) {
+			this.sfx.get("jump").play();
 			this.dy = this.jumpStart;
 			this.falling = true;
 		}
@@ -313,6 +357,58 @@ public class Player extends MapObject implements Drawable {
 				this.dy = this.maxFallSpeed;
 			}
 		}
+	}
+
+	public void checkAtack(List<Enemy> enemies) {
+
+		for (int i = 0; i < enemies.size(); i++) {
+			Enemy e = enemies.get(i);
+			// check scratch
+			if (this.scratching) {
+				if (this.facingRight) {
+					if (e.getX() > this.x
+							&& e.getX() < this.x + this.scratchRange
+							&& e.getY() > this.y - this.height / 2
+							&& e.getY() < this.y + this.height / 2) {
+						e.hit(this.scratchDamage);
+					}
+				}
+			} else {
+				if (e.getX() < this.x && e.getX() > this.x - this.scratchRange
+						&& e.getY() > this.y - this.height / 2
+						&& e.getY() < this.y + this.height / 2) {
+					e.hit(this.scratchDamage);
+				}
+			}
+			// fireballs
+			for (int j = 0; j < this.fireBalls.size(); j++) {
+				if (this.fireBalls.get(j).intersects(e)) {
+					e.hit(this.fireBallDamage);
+					this.fireBalls.get(j).setHit();
+				}
+			}
+
+			if (intersects(e)) {
+				hit(e.getDamage());
+			}
+		}
+
+	}
+
+	public void hit(int damage) {
+		if (this.dead || this.flinching) {
+			return;
+		}
+		this.health -= damage;
+		if (this.health < 0) {
+			this.health = 0;
+		}
+		if (this.health == 0) {
+			this.dead = true;
+		}
+
+		this.flinching = true;
+		this.flinchingTime = System.nanoTime();
 	}
 
 }

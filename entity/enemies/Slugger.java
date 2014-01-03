@@ -103,7 +103,7 @@ public class Slugger extends Enemy {
 	public void draw(Graphics2D graphics) {
 
 		if (notOnScreen()) {
-			return;
+			// return;
 		}
 		setMapPosition();
 
